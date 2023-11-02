@@ -1,4 +1,4 @@
 import passportMiddleware from './passport';
-import idDecoder from './idDecoder';
+import { checkAuth } from './checkAuth';
 
-export { passportMiddleware, idDecoder };
+export { passportMiddleware, checkAuth };

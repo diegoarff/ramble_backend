@@ -12,9 +12,13 @@ export default new Strategy(opts, async (payload, done) => {
     if (user !== null) {
       done(null, user);
     } else {
-      done(null, false);
+      done(null, false, {
+        status: 'error',
+        message: 'You are unauthorized to access this resource',
+      });
     }
   } catch (error) {
     console.log(error);
+    done(error, false);
   }
 });
