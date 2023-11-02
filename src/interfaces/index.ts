@@ -1,9 +1,10 @@
-import { type ITweet, type ITweetDocument } from './tweet.interfaces';
-import { type IUser, type IUserDocument } from './user.interfaces';
-import { type IBlock, type IBlockDocument } from './block.interfaces';
-import { type ILike, type ILikeDocument } from './like.interfaces';
-import { type IRetweet, type IRetweetDocument } from './retweet.interfaces';
-import { type IFollow, type IFollowDocument } from './follow.interfaces';
+import type { ITweet, ITweetDocument } from './tweet';
+import type { IUser, IUserDocument } from './user';
+import type { IBlock, IBlockDocument } from './block';
+import type { ILike, ILikeDocument } from './like';
+import type { IRetweet, IRetweetDocument } from './retweet';
+import type { IFollow, IFollowDocument } from './follow';
+import type { AuthRequest } from './auth';
 
 export type {
   ITweet,
@@ -18,4 +19,5 @@ export type {
   IRetweetDocument,
   IFollow,
   IFollowDocument,
+  AuthRequest,
 };

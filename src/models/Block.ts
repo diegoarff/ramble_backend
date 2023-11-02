@@ -3,12 +3,12 @@ import { type IBlockDocument } from '../interfaces';
 
 const BlockSchema = new Schema<IBlockDocument>(
   {
-    userId: {
+    blockedUserId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    blockedUserId: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,

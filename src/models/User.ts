@@ -29,7 +29,7 @@ const UserScehma = new Schema<IUserDocument>(
     },
     avatar: {
       type: String,
-      required: true,
+      default: '', // Cambiar por el link de la imagen
     },
   },
   {

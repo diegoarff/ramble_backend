@@ -8,7 +8,7 @@ const FollowSchema = new Schema<IFollowDocument>(
       ref: 'User',
       required: true,
     },
-    followerId: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
