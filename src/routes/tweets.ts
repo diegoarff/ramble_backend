@@ -3,13 +3,11 @@ import { TweetsController } from '../controllers';
 
 const router = Router();
 
-// TODO: Implement controllers
+router.get('/recent', TweetsController.getRecentTweets);
 
-router.get('/recent');
+router.get('/following', TweetsController.getFollowingTweets);
 
-router.get('/following');
-
-router.get('/search');
+router.get('/search', TweetsController.searchTweets);
 
 router.post('/', TweetsController.createTweet);
 
@@ -21,10 +19,16 @@ router
 
 router.post('/:tweetId/reply', TweetsController.createTweet);
 
-router.get('/:tweetId/replies');
+router.get('/:tweetId/replies', TweetsController.getTweetReplies);
 
-router.route('/:tweetId/like').post().delete();
+router
+  .route('/:tweetId/like')
+  .post(TweetsController.handleLike)
+  .delete(TweetsController.handleLike);
 
-router.route('/:tweetId/retweet').post().delete();
+router
+  .route('/:tweetId/retweet')
+  .post(TweetsController.handleRetweet)
+  .delete(TweetsController.handleRetweet);
 
 export default router;
