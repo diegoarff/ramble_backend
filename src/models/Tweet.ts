@@ -12,6 +12,7 @@ const TweetSchema = new Schema<ITweetDocument>(
     image: {
       type: String,
       trim: true,
+      default: null,
     },
     userId: {
       type: Schema.Types.ObjectId,

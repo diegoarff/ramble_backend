@@ -1,8 +1,8 @@
-import { type Document, type ObjectId } from 'mongoose';
+import type { Document, Types } from 'mongoose';
 
 export interface IFollow {
-  followingId: ObjectId;
-  userId: ObjectId;
+  followingId: Types.ObjectId;
+  userId: Types.ObjectId;
 }
 
 export interface IFollowDocument extends IFollow, Document {}

@@ -29,7 +29,8 @@ const UserScehma = new Schema<IUserDocument>(
     },
     avatar: {
       type: String,
-      default: '', // Cambiar por el link de la imagen
+      default:
+        'https://firebasestorage.googleapis.com/v0/b/ramble-322a6.appspot.com/o/test%2F1698975678282.jpeg?alt=media&token=c9a7b759-be64-4a3e-aa5b-b932c7b7159f',
     },
   },
   {

@@ -1,8 +1,8 @@
-import { type Document, type ObjectId } from 'mongoose';
+import type { Document, Types } from 'mongoose';
 
 export interface ILike {
-  userId: ObjectId;
-  tweetId: ObjectId;
+  userId: Types.ObjectId;
+  tweetId: Types.ObjectId;
 }
 
 export interface ILikeDocument extends ILike, Document {}

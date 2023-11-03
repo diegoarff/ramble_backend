@@ -1,4 +1,4 @@
 import AuthController from './AuthController';
-import BaseController from './BaseController';
+import TweetsController from './TweetsController';
 
-export { AuthController, BaseController };
+export { AuthController, TweetsController };

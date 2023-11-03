@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { TweetsController } from '../controllers';
 
 const router = Router();
 
@@ -10,11 +11,15 @@ router.get('/following');
 
 router.get('/search');
 
-router.post('/'); // Create a new tweet
+router.post('/', TweetsController.createTweet);
 
-router.route('/:tweetId').get().put().delete();
+router
+  .route('/:tweetId')
+  .get(TweetsController.getTweet)
+  .put(TweetsController.updateTweet)
+  .delete(TweetsController.deleteTweet);
 
-router.post('/:tweetId/reply');
+router.post('/:tweetId/reply', TweetsController.createTweet);
 
 router.get('/:tweetId/replies');
 

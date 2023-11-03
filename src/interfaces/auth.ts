@@ -1,6 +1,8 @@
-import type { JwtPayload } from 'jsonwebtoken';
+import type { Types } from 'mongoose';
 import type { Request } from 'express';
 
 export interface AuthRequest extends Request {
-  userId: string | JwtPayload;
+  user: {
+    _id: Types.ObjectId;
+  };
 }

@@ -1,9 +1,9 @@
-import { type Document, type ObjectId } from 'mongoose';
+import type { Document, Types } from 'mongoose';
 
 export interface ITweet {
   content: string;
-  image?: string | null;
-  userId: ObjectId;
+  image?: string;
+  userId: Types.ObjectId;
   isReplyTo?: string | null;
   isEdited: boolean;
 }
