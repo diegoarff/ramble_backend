@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 
 class BaseController {
-  public successRes<T>(
+  protected successRes<T>(
     res: Response,
     statusCode = 200,
     message: string,
@@ -21,7 +21,7 @@ class BaseController {
     });
   }
 
-  public errorRes<T>(
+  protected errorRes<T>(
     res: Response,
     statusCode = 400,
     message: string,

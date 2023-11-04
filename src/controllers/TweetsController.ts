@@ -1,48 +1,13 @@
 import BaseController from './BaseController';
 import type { Request, Response } from 'express';
-import { Tweet, Follow, Like, Retweet } from '../models';
+import { Tweet, Follow, Like, Retweet, tweetPipeline } from '../models';
 import type { AuthRequest } from '../interfaces';
-import { type Aggregate, Types } from 'mongoose';
+import { Types } from 'mongoose';
 
 class TweetsController extends BaseController {
-  // TODO: Create a pagination pipeline
-
-  private tweetPipeline(): Aggregate<unknown[]> {
-    return Tweet.aggregate()
-      .lookup({
-        from: 'likes',
-        localField: '_id',
-        foreignField: 'tweetId',
-        as: 'likes',
-      })
-      .lookup({
-        from: 'retweets',
-        localField: '_id',
-        foreignField: 'tweetId',
-        as: 'retweets',
-      })
-      .lookup({
-        from: 'users',
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'user',
-      })
-      .project({
-        _id: 1,
-        content: 1,
-        image: 1,
-        isReplyTo: 1,
-        isEdited: 1,
-        createdAt: 1,
-        user: { $arrayElemAt: ['$user', 0] },
-        likeCount: { $size: '$likes' },
-        retweetCount: { $size: '$retweets' },
-      });
-  }
-
   getRecentTweets = async (_: Request, res: Response): Promise<Response> => {
     try {
-      const recentTweets = await this.tweetPipeline()
+      const recentTweets = await tweetPipeline()
         .sort({ createdAt: -1 })
         .limit(10)
         .exec();
@@ -64,7 +29,7 @@ class TweetsController extends BaseController {
 
       const followingUserIds = following.map((follow) => follow.followingId);
 
-      const followingTweets = await this.tweetPipeline()
+      const followingTweets = await tweetPipeline()
         .match({ userId: { $in: followingUserIds } })
         .sort({ createdAt: -1 })
         .limit(10) // Adjust the number of tweets to return as needed
@@ -85,9 +50,10 @@ class TweetsController extends BaseController {
     const { tweetId } = req.params;
 
     try {
-      const tweetReplies = await Tweet.find({ isReplyTo: tweetId })
+      const tweetReplies = await tweetPipeline()
+        .match({ isReplyTo: new Types.ObjectId(tweetId) })
         .sort({ createdAt: 1 })
-        .populate('userId', 'name username avatar') // Populate the 'userId' field with user information
+        .limit(10)
         .exec();
 
       return this.successRes(res, 200, 'Tweet replies retrieved', tweetReplies);
@@ -121,7 +87,7 @@ class TweetsController extends BaseController {
     const { tweetId } = req.params;
 
     try {
-      const tweet = await this.tweetPipeline()
+      const tweet = await tweetPipeline()
         .match({ _id: new Types.ObjectId(tweetId) })
         .exec();
 
@@ -157,6 +123,7 @@ class TweetsController extends BaseController {
 
       tweet.content = content ?? tweet.content;
       tweet.image = image ?? tweet.image;
+      tweet.isEdited = true;
 
       await tweet.save();
 
@@ -194,15 +161,15 @@ class TweetsController extends BaseController {
   };
 
   searchTweets = async (req: Request, res: Response): Promise<Response> => {
-    const { query } = req.query;
+    const { q } = req.query;
 
-    if (!query) {
+    if (!q) {
       return this.errorRes(res, 400, 'Query cannot be empty');
     }
 
     try {
-      const tweets = await this.tweetPipeline()
-        .match({ content: { $regex: query, $options: 'i' } })
+      const tweets = await tweetPipeline()
+        .match({ content: { $regex: q, $options: 'i' } })
         .sort({ createdAt: -1 })
         .limit(10)
         .exec();
