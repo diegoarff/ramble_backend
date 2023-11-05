@@ -5,7 +5,6 @@ import {
   User,
   Follow,
   Block,
-  Retweet,
   Like,
   Tweet,
   tweetPipeline,
@@ -19,53 +18,8 @@ class UsersController extends BaseController {
     const authUserId = (req as AuthRequest).user._id;
 
     try {
-      const user = await userPipeline()
+      const user = await userPipeline(authUserId)
         .match({ _id: new Types.ObjectId(userId) })
-        .lookup({
-          from: 'blocks',
-          let: { userId: '$_id', authUserId },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$blockedUserId', '$$userId'] },
-                    { $eq: ['$userId', '$$authUserId'] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'myBlocks',
-        })
-        .lookup({
-          from: 'blocks',
-          let: { userId: '$_id', authUserId },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$blockedUserId', '$$authUserId'] },
-                    { $eq: ['$userId', '$$userId'] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'blocksMe',
-        })
-        .project({
-          _id: 1,
-          name: 1,
-          username: 1,
-          bio: 1,
-          createdAt: 1,
-          followingCount: { $size: '$following' },
-          followersCount: { $size: '$followers' },
-          isBlocked: { $gt: [{ $size: '$myBlocks' }, 0] },
-          hasMeBlocked: { $gt: [{ $size: '$blocksMe' }, 0] },
-        })
         .exec();
 
       if (user.length === 0) {
@@ -131,7 +85,6 @@ class UsersController extends BaseController {
       }
 
       await Tweet.deleteMany({ userId });
-      await Retweet.deleteMany({ userId });
       await Like.deleteMany({ userId });
       await Follow.deleteMany({ userId });
       await Follow.deleteMany({ followingId: userId });
@@ -161,20 +114,12 @@ class UsersController extends BaseController {
             { username: { $regex: q as string, $options: 'i' } },
           ],
         })
-        .project({
-          _id: 1,
-          name: 1,
-          username: 1,
-          bio: 1,
-          createdAt: 1,
-          followingCount: { $size: '$following' },
-          followersCount: { $size: '$followers' },
-        })
         .limit(10)
         .exec();
 
       return this.successRes(res, 200, 'Users retrieved', users);
     } catch (error) {
+      console.log(error);
       return this.errorRes(res, 500, 'Error getting users', error);
     }
   };
@@ -253,10 +198,15 @@ class UsersController extends BaseController {
       }
 
       const followers = await Follow.find({ followingId: userId })
-        .populate('userId')
+        .populate({
+          path: 'userId',
+          select: '-password -email -createdAt -updatedAt',
+        })
+        .select('-_id userId')
         .exec();
 
-      return this.successRes(res, 200, 'Followers retrieved', followers);
+      const followersRes = followers.map((user) => user.userId);
+      return this.successRes(res, 200, 'Followers retrieved', followersRes);
     } catch (error) {
       return this.errorRes(res, 500, 'Error getting followers', error);
     }
@@ -273,10 +223,15 @@ class UsersController extends BaseController {
       }
 
       const following = await Follow.find({ userId })
-        .populate('followingId')
+        .populate({
+          path: 'followingId',
+          select: '-password -email -createdAt -updatedAt',
+        })
+        .select('-_id followingId')
         .exec();
 
-      return this.successRes(res, 200, 'Following retrieved', following);
+      const followingRes = following.map((follow) => follow.followingId);
+      return this.successRes(res, 200, 'Following retrieved', followingRes);
     } catch (error) {
       return this.errorRes(res, 500, 'Error getting following', error);
     }

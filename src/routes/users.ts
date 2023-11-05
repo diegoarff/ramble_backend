@@ -11,8 +11,6 @@ router
   .put(UsersController.updateUser)
   .delete(UsersController.deleteUser);
 
-router.get('/:userId', UsersController.getUser);
-
 router.get('/:userId/tweets', UsersController.getUserTweets);
 
 router.get('/:userId/liked', UsersController.getUserLikedTweets);
@@ -23,14 +21,10 @@ router.get('/:userId/followers', UsersController.getUserFollowers);
 
 router.get('/:userId/following', UsersController.getUserFollowing);
 
-router
-  .route('/:userId/follow')
-  .post(UsersController.handleFollow)
-  .delete(UsersController.handleFollow);
+router.post('/:userId/follow', UsersController.handleFollow);
 
-router
-  .route('/:userId/block')
-  .post(UsersController.handleBlock)
-  .delete(UsersController.handleBlock);
+router.post('/:userId/block', UsersController.handleBlock);
+
+router.get('/:userId', UsersController.getUser);
 
 export default router;

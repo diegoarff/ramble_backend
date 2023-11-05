@@ -1,6 +1,6 @@
 import BaseController from './BaseController';
 import type { Request, Response } from 'express';
-import { Tweet, Follow, Like, Retweet, tweetPipeline } from '../models';
+import { Tweet, Follow, Like, tweetPipeline } from '../models';
 import type { AuthRequest } from '../interfaces';
 import { Types } from 'mongoose';
 
@@ -8,6 +8,7 @@ class TweetsController extends BaseController {
   getRecentTweets = async (_: Request, res: Response): Promise<Response> => {
     try {
       const recentTweets = await tweetPipeline()
+        .match({ isReplyTo: null })
         .sort({ createdAt: -1 })
         .limit(10)
         .exec();
@@ -28,9 +29,11 @@ class TweetsController extends BaseController {
       const following = await Follow.find({ userId }).select('followingId');
 
       const followingUserIds = following.map((follow) => follow.followingId);
+      console.log(followingUserIds);
 
       const followingTweets = await tweetPipeline()
-        .match({ userId: { $in: followingUserIds } })
+        .match({ 'user._id': { $in: followingUserIds } })
+        .match({ isReplyTo: null })
         .sort({ createdAt: -1 })
         .limit(10) // Adjust the number of tweets to return as needed
         .exec();
@@ -198,27 +201,6 @@ class TweetsController extends BaseController {
       return this.successRes(res, 200, 'Tweet liked');
     } catch (error) {
       return this.errorRes(res, 500, 'Failed to like tweet', error);
-    }
-  };
-
-  handleRetweet = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const { tweetId } = req.params;
-      const userId = (req as AuthRequest).user._id;
-
-      const retweet = await Retweet.findOne({ userId, tweetId });
-
-      if (retweet != null) {
-        await retweet.deleteOne();
-
-        return this.successRes(res, 200, 'Tweet unretweeted', retweet);
-      }
-
-      await Retweet.create({ userId, tweetId });
-
-      return this.successRes(res, 200, 'Tweet retweeted');
-    } catch (error) {
-      return this.errorRes(res, 500, 'Failed to retweet tweet', error);
     }
   };
 }

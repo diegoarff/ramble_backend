@@ -2,7 +2,6 @@ import type { ITweet, ITweetDocument } from './tweet';
 import type { IUser, IUserDocument } from './user';
 import type { IBlock, IBlockDocument } from './block';
 import type { ILike, ILikeDocument } from './like';
-import type { IRetweet, IRetweetDocument } from './retweet';
 import type { IFollow, IFollowDocument } from './follow';
 import type { AuthRequest } from './auth';
 
@@ -15,8 +14,6 @@ export type {
   IBlockDocument,
   ILike,
   ILikeDocument,
-  IRetweet,
-  IRetweetDocument,
   IFollow,
   IFollowDocument,
   AuthRequest,
