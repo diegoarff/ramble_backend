@@ -1,15 +1,7 @@
 import BaseController from './BaseController';
 import type { Request, Response } from 'express';
 import type { AuthRequest } from '../interfaces';
-import {
-  User,
-  Follow,
-  Block,
-  Like,
-  Tweet,
-  tweetPipeline,
-  userPipeline,
-} from '../models';
+import { User, Follow, Block, tweetPipeline, userPipeline } from '../models';
 import { Types } from 'mongoose';
 
 class UsersController extends BaseController {
@@ -84,12 +76,6 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      await Tweet.deleteMany({ userId });
-      await Like.deleteMany({ userId });
-      await Follow.deleteMany({ userId });
-      await Follow.deleteMany({ followingId: userId });
-      await Block.deleteMany({ userId });
-      await Block.deleteMany({ blockedUserId: userId });
       await user.deleteOne();
 
       return this.successRes(res, 200, 'Account deleted');
@@ -101,20 +87,24 @@ class UsersController extends BaseController {
   // searchUsers
   searchUsers = async (req: Request, res: Response): Promise<Response> => {
     const { q } = req.query;
+    const authUserId = (req as AuthRequest).user._id;
 
     if (!q) {
       return this.errorRes(res, 400, 'Query cannot be empty');
     }
 
     try {
-      const users = await userPipeline()
+      const users = await userPipeline(authUserId)
         .match({
           $or: [
             { name: { $regex: q as string, $options: 'i' } },
             { username: { $regex: q as string, $options: 'i' } },
           ],
         })
-        .limit(10)
+        .match({
+          hasMeBlocked: false, // Exclude users who have blocked you
+          blocked: false, // Exclude users who are blocked by you
+        })
         .exec();
 
       return this.successRes(res, 200, 'Users retrieved', users);
@@ -126,6 +116,7 @@ class UsersController extends BaseController {
 
   getUserTweets = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
+    const authUserId = (req as AuthRequest).user._id;
 
     try {
       const user = User.exists({ _id: userId });
@@ -134,9 +125,13 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline({
-        'user._id': new Types.ObjectId(userId),
-      }).exec();
+      const tweets = await tweetPipeline(null, authUserId)
+        .match({
+          'user._id': new Types.ObjectId(userId),
+        })
+        .match({ isReplyTo: null })
+        .sort({ createdAt: -1 })
+        .exec();
 
       return this.successRes(res, 200, 'Tweets from user retrieved', tweets);
     } catch (error) {
@@ -149,6 +144,7 @@ class UsersController extends BaseController {
     res: Response,
   ): Promise<Response> => {
     const { userId } = req.params;
+    const authUserId = (req as AuthRequest).user._id;
 
     try {
       const user = User.exists({ _id: userId });
@@ -157,9 +153,14 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline({
-        'likes.userId': new Types.ObjectId(userId),
-      }).exec();
+      const tweets = await tweetPipeline(
+        {
+          'likes.userId': new Types.ObjectId(userId),
+        },
+        authUserId,
+      )
+        .sort({ createdAt: -1 })
+        .exec();
 
       return this.successRes(res, 200, 'Liked tweets retrieved', tweets);
     } catch (error) {
@@ -169,6 +170,7 @@ class UsersController extends BaseController {
 
   getUserReplies = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
+    const authUserId = (req as AuthRequest).user._id;
 
     try {
       const user = User.exists({ _id: userId });
@@ -177,9 +179,14 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline({
-        'replies.user._id': new Types.ObjectId(userId),
-      }).exec();
+      const tweets = await tweetPipeline(
+        {
+          'replies.user._id': new Types.ObjectId(userId),
+        },
+        authUserId,
+      )
+        .sort({ createdAt: -1 })
+        .exec();
 
       return this.successRes(res, 200, 'Replies retrieved', tweets);
     } catch (error) {
@@ -256,7 +263,25 @@ class UsersController extends BaseController {
       if (follow != null) {
         await follow.deleteOne();
 
-        return this.successRes(res, 200, 'Follow removed', follow);
+        return this.successRes(res, 200, 'User unfollowed', follow);
+      }
+
+      const isBlocked = await Block.findOne({
+        blockedUserId: userId,
+        userId: authUserId,
+      });
+
+      if (isBlocked != null) {
+        return this.errorRes(res, 400, 'Cannot follow a blocked user');
+      }
+
+      const hasMeBlocked = await Block.findOne({
+        blockedUserId: authUserId,
+        userId,
+      });
+
+      if (hasMeBlocked != null) {
+        return this.errorRes(res, 400, 'Cannot follow a user that blocked you');
       }
 
       await Follow.create({
@@ -264,9 +289,9 @@ class UsersController extends BaseController {
         userId: authUserId,
       });
 
-      return this.successRes(res, 200, 'Follow updated');
+      return this.successRes(res, 200, 'User followed');
     } catch (error) {
-      return this.errorRes(res, 500, 'Error updating follow', error);
+      return this.errorRes(res, 500, 'Error following user', error);
     }
   };
 
@@ -289,7 +314,25 @@ class UsersController extends BaseController {
       if (block != null) {
         await block.deleteOne();
 
-        return this.successRes(res, 200, 'Block removed', block);
+        return this.successRes(res, 200, 'User unblocked', block);
+      }
+
+      const following = await Follow.findOne({
+        followingId: userId,
+        userId: authUserId,
+      });
+
+      if (following != null) {
+        await following.deleteOne();
+      }
+
+      const isFollowingMe = await Follow.findOne({
+        followingId: authUserId,
+        userId,
+      });
+
+      if (isFollowingMe != null) {
+        await isFollowingMe.deleteOne();
       }
 
       await Block.create({
@@ -297,9 +340,9 @@ class UsersController extends BaseController {
         userId: authUserId,
       });
 
-      return this.successRes(res, 200, 'Block updated');
+      return this.successRes(res, 200, 'User blocked');
     } catch (error) {
-      return this.errorRes(res, 500, 'Error updating block', error);
+      return this.errorRes(res, 500, 'Error blocking user', error);
     }
   };
 }

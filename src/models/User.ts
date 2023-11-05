@@ -2,6 +2,10 @@ import { Schema, model } from 'mongoose';
 import { type IUserDocument } from '../interfaces';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import Tweet from './Tweet';
+import Like from './Like';
+import Follow from './Follow';
+import Block from './Block';
 
 const UserSchema = new Schema<IUserDocument>(
   {
@@ -46,6 +50,21 @@ UserSchema.pre<IUserDocument>('save', async function (next) {
   const hashedPassword = await bcrypt.hash(this.password, salt);
 
   this.password = hashedPassword;
+  next();
+});
+
+UserSchema.pre('deleteOne', { document: true }, async function (next) {
+  const userId = this._id;
+
+  await Promise.all([
+    Tweet.deleteMany({ userId }),
+    Like.deleteMany({ userId }),
+    Follow.deleteMany({ userId }),
+    Follow.deleteMany({ followeeId: userId }),
+    Block.deleteMany({ userId }),
+    Block.deleteMany({ blockedId: userId }),
+  ]);
+
   next();
 });
 

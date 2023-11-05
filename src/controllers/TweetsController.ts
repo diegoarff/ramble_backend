@@ -1,16 +1,17 @@
 import BaseController from './BaseController';
 import type { Request, Response } from 'express';
-import { Tweet, Follow, Like, tweetPipeline } from '../models';
+import { Tweet, Follow, Like, Block, tweetPipeline } from '../models';
 import type { AuthRequest } from '../interfaces';
 import { Types } from 'mongoose';
 
 class TweetsController extends BaseController {
-  getRecentTweets = async (_: Request, res: Response): Promise<Response> => {
+  getRecentTweets = async (req: Request, res: Response): Promise<Response> => {
+    const userId = (req as AuthRequest).user._id;
+
     try {
-      const recentTweets = await tweetPipeline()
+      const recentTweets = await tweetPipeline(null, userId)
         .match({ isReplyTo: null })
         .sort({ createdAt: -1 })
-        .limit(10)
         .exec();
 
       return this.successRes(res, 200, 'Recent tweets retrieved', recentTweets);
@@ -31,11 +32,10 @@ class TweetsController extends BaseController {
       const followingUserIds = following.map((follow) => follow.followingId);
       console.log(followingUserIds);
 
-      const followingTweets = await tweetPipeline()
+      const followingTweets = await tweetPipeline(null, userId)
         .match({ 'user._id': { $in: followingUserIds } })
         .match({ isReplyTo: null })
         .sort({ createdAt: -1 })
-        .limit(10) // Adjust the number of tweets to return as needed
         .exec();
 
       return this.successRes(
@@ -51,9 +51,10 @@ class TweetsController extends BaseController {
 
   getTweetReplies = async (req: Request, res: Response): Promise<Response> => {
     const { tweetId } = req.params;
+    const userId = (req as AuthRequest).user._id;
 
     try {
-      const tweetReplies = await tweetPipeline()
+      const tweetReplies = await tweetPipeline(null, userId)
         .match({ isReplyTo: new Types.ObjectId(tweetId) })
         .sort({ createdAt: 1 })
         .limit(10)
@@ -88,9 +89,10 @@ class TweetsController extends BaseController {
 
   getTweet = async (req: Request, res: Response): Promise<Response> => {
     const { tweetId } = req.params;
+    const userId = (req as AuthRequest).user._id;
 
     try {
-      const tweet = await tweetPipeline()
+      const tweet = await tweetPipeline(null, userId)
         .match({ _id: new Types.ObjectId(tweetId) })
         .exec();
 
@@ -107,10 +109,10 @@ class TweetsController extends BaseController {
   updateTweet = async (req: Request, res: Response): Promise<Response> => {
     const { content, image } = req.body;
     const { tweetId } = req.params;
+    const userId = (req as AuthRequest).user._id;
 
     try {
       const tweet = await Tweet.findOne({ _id: tweetId });
-      const userId = (req as AuthRequest).user._id;
 
       if (tweet == null) {
         return this.errorRes(res, 404, 'Tweet not found');
@@ -165,16 +167,29 @@ class TweetsController extends BaseController {
 
   searchTweets = async (req: Request, res: Response): Promise<Response> => {
     const { q } = req.query;
+    const userId = (req as AuthRequest).user._id;
 
     if (!q) {
       return this.errorRes(res, 400, 'Query cannot be empty');
     }
 
     try {
-      const tweets = await tweetPipeline()
-        .match({ content: { $regex: q, $options: 'i' } })
+      const myBlocks = await Block.find({ userId });
+      const blocksMe = await Block.find({ blockedUserId: userId });
+
+      const blockedUserIds = myBlocks.map((block) => block.blockedUserId);
+      const blockedByUserIds = blocksMe.map((block) => block.userId);
+
+      const tweets = await tweetPipeline(null, userId)
+        .match({
+          $and: [
+            { content: { $regex: q as string, $options: 'i' } },
+            { 'user._id': { $nin: blockedUserIds } },
+            { 'user._id': { $nin: blockedByUserIds } },
+            { isReplyTo: null },
+          ],
+        })
         .sort({ createdAt: -1 })
-        .limit(10)
         .exec();
 
       return this.successRes(res, 200, 'Tweets retrieved', tweets);

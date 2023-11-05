@@ -4,7 +4,10 @@ import type { Aggregate, Types } from 'mongoose';
 
 // TODO: Create a pagination pipeline
 
-export function tweetPipeline(deepMatchFilter?: object): Aggregate<unknown[]> {
+export function tweetPipeline(
+  deepMatchFilter: object | null = null,
+  authId?: Types.ObjectId,
+): Aggregate<unknown[]> {
   let pipeline = Tweet.aggregate()
     .lookup({
       from: 'likes',
@@ -29,17 +32,39 @@ export function tweetPipeline(deepMatchFilter?: object): Aggregate<unknown[]> {
     pipeline = pipeline.match(deepMatchFilter);
   }
 
-  return pipeline.project({
-    _id: 1,
-    content: 1,
-    image: 1,
-    isReplyTo: 1,
-    isEdited: 1,
-    createdAt: 1,
-    user: { _id: 1, name: 1, username: 1, avatar: 1 },
-    likeCount: { $size: '$likes' },
-    replyCount: { $size: '$replies' },
-  });
+  if (authId) {
+    pipeline = pipeline.lookup({
+      from: 'likes',
+      localField: '_id',
+      foreignField: 'tweetId',
+      as: 'userLikes',
+    });
+  }
+
+  return pipeline
+    .addFields({
+      liked: {
+        $cond: {
+          if: {
+            $in: [authId, '$userLikes.userId'],
+          },
+          then: true,
+          else: false,
+        },
+      },
+    })
+    .project({
+      _id: 1,
+      content: 1,
+      image: 1,
+      isReplyTo: 1,
+      isEdited: 1,
+      createdAt: 1,
+      user: { _id: 1, name: 1, username: 1, avatar: 1 },
+      likeCount: { $size: '$likes' },
+      replyCount: { $size: '$replies' },
+      liked: 1,
+    });
 }
 
 export function userPipeline(authId?: Types.ObjectId): Aggregate<unknown[]> {
