@@ -39,4 +39,5 @@ export const bio = z
   .string({
     invalid_type_error: 'Bio must be a string',
   })
-  .max(160, 'Bio must be at most 160 characters');
+  .max(160, 'Bio must be at most 160 characters')
+  .optional();

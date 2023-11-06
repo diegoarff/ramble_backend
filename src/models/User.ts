@@ -81,4 +81,10 @@ UserSchema.methods.createToken = function (): string {
   );
 };
 
+UserSchema.methods.toSafeObject = function (): object {
+  const { _id, name, username, email, bio, avatar, createdAt } = this;
+
+  return { _id, name, username, email, bio, avatar, createdAt };
+};
+
 export default model<IUserDocument>('User', UserSchema);

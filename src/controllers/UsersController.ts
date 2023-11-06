@@ -71,7 +71,7 @@ class UsersController extends BaseController {
   };
 
   updateUser = async (req: Request, res: Response): Promise<Response> => {
-    const { name, username, bio } = req.body;
+    const { name, username, avatar, bio } = req.body;
     const userId = (req as AuthRequest).user._id;
 
     try {
@@ -83,11 +83,12 @@ class UsersController extends BaseController {
 
       user.name = name ?? user.name;
       user.username = username ?? user.username;
+      user.avatar = avatar ?? user.avatar;
       user.bio = bio ?? user.bio;
 
       await user.save();
 
-      return this.successRes(res, 200, 'User updated', user);
+      return this.successRes(res, 200, 'User updated', user.toSafeObject());
     } catch (error) {
       return this.errorRes(res, 500, 'Error updating user', error);
     }

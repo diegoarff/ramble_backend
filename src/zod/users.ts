@@ -6,6 +6,7 @@ export const updateUserSchema = z
     name,
     username,
     bio,
+    avatar: z.string().url({ message: 'Avatar must be a valid URL' }),
   })
   .partial()
   .superRefine(({ name, username, bio }, ctx) => {

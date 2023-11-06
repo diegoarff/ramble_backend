@@ -258,7 +258,12 @@ class TweetsController extends BaseController {
 
       const tweets = await tweetPipelineBuilder.limit(10).exec();
 
-      return this.successRes(res, 200, 'Liked tweets retrieved', tweets);
+      return this.successRes(
+        res,
+        200,
+        'Liked tweets from user retrieved',
+        tweets,
+      );
     } catch (error) {
       return this.errorRes(res, 500, 'Error getting liked tweets', error);
     }
@@ -293,7 +298,7 @@ class TweetsController extends BaseController {
 
       const tweets = await tweetPipelineBuilder.limit(10).exec();
 
-      return this.successRes(res, 200, 'Replies retrieved', tweets);
+      return this.successRes(res, 200, 'Replies from user retrieved', tweets);
     } catch (error) {
       return this.errorRes(res, 500, 'Error getting replies', error);
     }

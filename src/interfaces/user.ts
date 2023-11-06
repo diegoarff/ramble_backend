@@ -12,4 +12,5 @@ export interface IUser {
 export interface IUserDocument extends IUser, Document {
   comparePassword: (password: string) => Promise<boolean>;
   createToken: () => string;
+  toSafeObject: () => object;
 }

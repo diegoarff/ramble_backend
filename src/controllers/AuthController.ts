@@ -23,10 +23,10 @@ class AuthController extends BaseController {
         username,
         email,
         password,
-        bio,
+        bio: bio ?? '',
       });
 
-      return this.successRes(res, 201, 'User created', user);
+      return this.successRes(res, 201, 'User created', user.toSafeObject());
     } catch (error) {
       console.log(error);
       return this.errorRes(res, 500, 'Internal server error');

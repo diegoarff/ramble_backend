@@ -13,7 +13,7 @@ router.get('/following', TweetsController.getFollowingTweets);
 
 router.get('/search', TweetsController.searchTweets);
 
-router.get('/user/:userId/tweets', TweetsController.getUserTweets);
+router.get('/user/:userId', TweetsController.getUserTweets);
 
 router.get('/user/:userId/replies', TweetsController.getUserReplies);
 
