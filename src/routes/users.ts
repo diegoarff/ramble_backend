@@ -11,6 +11,8 @@ router
   .put(UsersController.updateUser)
   .delete(UsersController.deleteUser);
 
+router.put('/me/password', UsersController.updatePassword);
+
 router.get('/:userId/tweets', UsersController.getUserTweets);
 
 router.get('/:userId/liked', UsersController.getUserLikedTweets);
