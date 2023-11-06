@@ -7,14 +7,22 @@ import { Types } from 'mongoose';
 class TweetsController extends BaseController {
   getRecentTweets = async (req: Request, res: Response): Promise<Response> => {
     const userId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
-      const recentTweets = await tweetPipeline(null, userId)
+      const tweetPipelineBuilder = tweetPipeline(null, userId)
         .match({ isReplyTo: null })
-        .sort({ createdAt: -1 })
-        .exec();
+        .sort({ createdAt: -1 });
 
-      return this.successRes(res, 200, 'Recent tweets retrieved', recentTweets);
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
+
+      return this.successRes(res, 200, 'Recent tweets retrieved', tweets);
     } catch (error) {
       return this.errorRes(res, 500, 'Failed to get recent tweets', error);
     }
@@ -25,6 +33,7 @@ class TweetsController extends BaseController {
     res: Response,
   ): Promise<Response> => {
     const userId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
       const following = await Follow.find({ userId }).select('followingId');
@@ -32,18 +41,20 @@ class TweetsController extends BaseController {
       const followingUserIds = following.map((follow) => follow.followingId);
       console.log(followingUserIds);
 
-      const followingTweets = await tweetPipeline(null, userId)
+      const tweetPipelineBuilder = tweetPipeline(null, userId)
         .match({ 'user._id': { $in: followingUserIds } })
         .match({ isReplyTo: null })
-        .sort({ createdAt: -1 })
-        .exec();
+        .sort({ createdAt: -1 });
 
-      return this.successRes(
-        res,
-        200,
-        'Following tweets retrieved',
-        followingTweets,
-      );
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
+
+      return this.successRes(res, 200, 'Following tweets retrieved', tweets);
     } catch (error) {
       return this.errorRes(res, 500, 'Failed to get following tweets', error);
     }
@@ -52,13 +63,20 @@ class TweetsController extends BaseController {
   getTweetReplies = async (req: Request, res: Response): Promise<Response> => {
     const { tweetId } = req.params;
     const userId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
-      const tweetReplies = await tweetPipeline(null, userId)
-        .match({ isReplyTo: new Types.ObjectId(tweetId) })
-        .sort({ createdAt: 1 })
-        .limit(10)
-        .exec();
+      const tweetPipelineBuilder = tweetPipeline(null, userId).match({
+        isReplyTo: new Types.ObjectId(tweetId),
+      });
+
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweetReplies = await tweetPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Tweet replies retrieved', tweetReplies);
     } catch (error) {
@@ -166,7 +184,7 @@ class TweetsController extends BaseController {
   };
 
   searchTweets = async (req: Request, res: Response): Promise<Response> => {
-    const { q } = req.query;
+    const { q, date } = req.query;
     const userId = (req as AuthRequest).user._id;
 
     if (!q) {
@@ -180,7 +198,7 @@ class TweetsController extends BaseController {
       const blockedUserIds = myBlocks.map((block) => block.blockedUserId);
       const blockedByUserIds = blocksMe.map((block) => block.userId);
 
-      const tweets = await tweetPipeline(null, userId)
+      const tweetPipelineBuilder = tweetPipeline(null, userId)
         .match({
           $and: [
             { content: { $regex: q as string, $options: 'i' } },
@@ -189,8 +207,15 @@ class TweetsController extends BaseController {
             { isReplyTo: null },
           ],
         })
-        .sort({ createdAt: -1 })
-        .exec();
+        .sort({ createdAt: -1 });
+
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Tweets retrieved', tweets);
     } catch (error) {

@@ -2,8 +2,6 @@ import Tweet from '../Tweet';
 import User from '../User';
 import type { Aggregate, Types } from 'mongoose';
 
-// TODO: Create a pagination pipeline
-
 export function tweetPipeline(
   deepMatchFilter: object | null = null,
   authId?: Types.ObjectId,

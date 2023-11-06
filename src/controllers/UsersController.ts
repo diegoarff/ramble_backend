@@ -113,7 +113,7 @@ class UsersController extends BaseController {
 
   // searchUsers
   searchUsers = async (req: Request, res: Response): Promise<Response> => {
-    const { q } = req.query;
+    const { q, date } = req.query;
     const authUserId = (req as AuthRequest).user._id;
 
     if (!q) {
@@ -121,7 +121,7 @@ class UsersController extends BaseController {
     }
 
     try {
-      const users = await userPipeline(authUserId)
+      const userPipelineBuilder = userPipeline(authUserId)
         .match({
           $or: [
             { name: { $regex: q as string, $options: 'i' } },
@@ -129,10 +129,18 @@ class UsersController extends BaseController {
           ],
         })
         .match({
-          hasMeBlocked: false, // Exclude users who have blocked you
-          blocked: false, // Exclude users who are blocked by you
+          hasMeBlocked: false,
+          blocked: false,
         })
-        .exec();
+        .sort({ createdAt: -1 });
+
+      if (date) {
+        userPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const users = await userPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Users retrieved', users);
     } catch (error) {
@@ -144,6 +152,7 @@ class UsersController extends BaseController {
   getUserTweets = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
     const authUserId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
       const user = User.exists({ _id: userId });
@@ -152,13 +161,20 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline(null, authUserId)
+      const tweetPipelineBuilder = tweetPipeline(null, authUserId)
         .match({
           'user._id': new Types.ObjectId(userId),
+          isReplyTo: null,
         })
-        .match({ isReplyTo: null })
-        .sort({ createdAt: -1 })
-        .exec();
+        .sort({ createdAt: -1 });
+
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Tweets from user retrieved', tweets);
     } catch (error) {
@@ -172,6 +188,7 @@ class UsersController extends BaseController {
   ): Promise<Response> => {
     const { userId } = req.params;
     const authUserId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
       const user = User.exists({ _id: userId });
@@ -180,14 +197,20 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline(
+      const tweetPipelineBuilder = tweetPipeline(
         {
           'likes.userId': new Types.ObjectId(userId),
         },
         authUserId,
-      )
-        .sort({ createdAt: -1 })
-        .exec();
+      ).sort({ createdAt: -1 });
+
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Liked tweets retrieved', tweets);
     } catch (error) {
@@ -198,6 +221,7 @@ class UsersController extends BaseController {
   getUserReplies = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
     const authUserId = (req as AuthRequest).user._id;
+    const { date } = req.query;
 
     try {
       const user = User.exists({ _id: userId });
@@ -206,14 +230,20 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const tweets = await tweetPipeline(
+      const tweetPipelineBuilder = tweetPipeline(
         {
           'replies.user._id': new Types.ObjectId(userId),
         },
         authUserId,
-      )
-        .sort({ createdAt: -1 })
-        .exec();
+      ).sort({ createdAt: -1 });
+
+      if (date) {
+        tweetPipelineBuilder.match({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const tweets = await tweetPipelineBuilder.limit(10).exec();
 
       return this.successRes(res, 200, 'Replies retrieved', tweets);
     } catch (error) {
@@ -223,6 +253,7 @@ class UsersController extends BaseController {
 
   getUserFollowers = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
+    const { date } = req.query;
 
     try {
       const user = User.exists({ _id: userId });
@@ -231,13 +262,21 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const followers = await Follow.find({ followingId: userId })
+      const followerPipelineBuilder = Follow.find({ followingId: userId })
         .populate({
           path: 'userId',
           select: '-password -email -createdAt -updatedAt',
         })
         .select('-_id userId')
-        .exec();
+        .sort({ createdAt: -1 });
+
+      if (date) {
+        followerPipelineBuilder.where({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const followers = await followerPipelineBuilder.limit(10).exec();
 
       const followersRes = followers.map((user) => user.userId);
       return this.successRes(res, 200, 'Followers retrieved', followersRes);
@@ -248,6 +287,7 @@ class UsersController extends BaseController {
 
   getUserFollowing = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
+    const { date } = req.query;
 
     try {
       const user = User.exists({ _id: userId });
@@ -256,13 +296,21 @@ class UsersController extends BaseController {
         return this.errorRes(res, 404, 'User not found');
       }
 
-      const following = await Follow.find({ userId })
+      const followingPipelineBuilder = Follow.find({ userId })
         .populate({
           path: 'followingId',
           select: '-password -email -createdAt -updatedAt',
         })
         .select('-_id followingId')
-        .exec();
+        .sort({ createdAt: -1 });
+
+      if (date) {
+        followingPipelineBuilder.where({
+          createdAt: { $lt: new Date(date as string) },
+        });
+      }
+
+      const following = await followingPipelineBuilder.limit(10).exec();
 
       const followingRes = following.map((follow) => follow.followingId);
       return this.successRes(res, 200, 'Following retrieved', followingRes);

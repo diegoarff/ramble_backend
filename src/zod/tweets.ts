@@ -7,9 +7,11 @@ export const createTweetSchema = z.object({
       invalid_type_error: 'Content must be a string',
     })
     .max(280, 'Content must be at most 280 characters'),
-  image: z.string({
-    invalid_type_error: 'Image must be a string',
-  }),
+  image: z
+    .string({
+      invalid_type_error: 'Image must be a string',
+    })
+    .optional(),
 });
 
 export const updateTweetSchema = createTweetSchema
