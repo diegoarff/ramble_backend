@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { TweetsController } from '../controllers';
+import { validate } from '../middlewares';
+import { createTweetSchema, updateTweetSchema } from '../zod';
 
 const router = Router();
 
-router.post('/', TweetsController.createTweet);
+router.post('/', validate(createTweetSchema), TweetsController.createTweet);
 
 router.get('/recent', TweetsController.getRecentTweets);
 
@@ -11,7 +13,11 @@ router.get('/following', TweetsController.getFollowingTweets);
 
 router.get('/search', TweetsController.searchTweets);
 
-router.post('/:tweetId/reply', TweetsController.createTweet);
+router.post(
+  '/:tweetId/reply',
+  validate(createTweetSchema),
+  TweetsController.createTweet,
+);
 
 router.get('/:tweetId/replies', TweetsController.getTweetReplies);
 
@@ -20,7 +26,12 @@ router.post('/:tweetId/like', TweetsController.handleLike);
 router
   .route('/:tweetId')
   .get(TweetsController.getTweet)
-  .put(TweetsController.updateTweet)
   .delete(TweetsController.deleteTweet);
+
+router.put(
+  '/:tweetId',
+  validate(updateTweetSchema),
+  TweetsController.updateTweet,
+);
 
 export default router;

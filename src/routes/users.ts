@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { UsersController } from '../controllers';
+import { validate } from '../middlewares';
+import { updateUserSchema, updatePasswordSchema } from '../zod';
 
 const router = Router();
 
@@ -8,10 +10,15 @@ router.get('/search', UsersController.searchUsers);
 router
   .route('/me')
   .get(UsersController.getAuthUser)
-  .put(UsersController.updateUser)
   .delete(UsersController.deleteUser);
 
-router.put('/me/password', UsersController.updatePassword);
+router.put('/me', validate(updateUserSchema), UsersController.updateUser);
+
+router.put(
+  '/me/password',
+  validate(updatePasswordSchema),
+  UsersController.updatePassword,
+);
 
 router.get('/:userId/tweets', UsersController.getUserTweets);
 
