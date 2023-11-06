@@ -10,7 +10,12 @@ class AuthController extends BaseController {
       const userExists = await User.exists({ username });
 
       if (userExists !== null) {
-        return this.errorRes(res, 400, 'Username already exists');
+        return this.errorRes(res, 400, 'Username is already taken');
+      }
+
+      const emailExists = await User.exists({ email });
+      if (emailExists !== null) {
+        return this.errorRes(res, 400, 'Account with email already exists');
       }
 
       const user = await User.create({
@@ -29,10 +34,12 @@ class AuthController extends BaseController {
   };
 
   signIn = async (req: Request, res: Response): Promise<Response> => {
-    const { username, password } = req.body;
+    const { identifier, password } = req.body;
 
     try {
-      const user = await User.findOne({ username });
+      const user = await User.findOne({
+        $or: [{ username: identifier }, { email: identifier }],
+      });
 
       if (user == null) {
         return this.errorRes(res, 404, 'User not found');

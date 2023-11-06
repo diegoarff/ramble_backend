@@ -5,8 +5,6 @@ import { updateUserSchema, updatePasswordSchema } from '../zod';
 
 const router = Router();
 
-router.get('/search', UsersController.searchUsers);
-
 router
   .route('/me')
   .get(UsersController.getAuthUser)
@@ -20,11 +18,7 @@ router.put(
   UsersController.updatePassword,
 );
 
-router.get('/:userId/tweets', UsersController.getUserTweets);
-
-router.get('/:userId/liked', UsersController.getUserLikedTweets);
-
-router.get('/:userId/replies', UsersController.getUserReplies);
+router.get('/search', UsersController.searchUsers);
 
 router.get('/:userId/followers', UsersController.getUserFollowers);
 

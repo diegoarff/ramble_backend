@@ -1,7 +1,7 @@
 import BaseController from './BaseController';
 import type { Request, Response } from 'express';
 import type { AuthRequest } from '../interfaces';
-import { User, Follow, Block, tweetPipeline, userPipeline } from '../models';
+import { User, Follow, Block, userPipeline } from '../models';
 import { Types } from 'mongoose';
 
 class UsersController extends BaseController {
@@ -111,26 +111,20 @@ class UsersController extends BaseController {
     }
   };
 
-  // searchUsers
   searchUsers = async (req: Request, res: Response): Promise<Response> => {
-    const { q, date } = req.query;
-    const authUserId = (req as AuthRequest).user._id;
+    const { query, date } = req.query;
 
-    if (!q) {
+    if (!query) {
       return this.errorRes(res, 400, 'Query cannot be empty');
     }
 
     try {
-      const userPipelineBuilder = userPipeline(authUserId)
+      const userPipelineBuilder = userPipeline()
         .match({
           $or: [
-            { name: { $regex: q as string, $options: 'i' } },
-            { username: { $regex: q as string, $options: 'i' } },
+            { name: { $regex: query as string, $options: 'i' } },
+            { username: { $regex: query as string, $options: 'i' } },
           ],
-        })
-        .match({
-          hasMeBlocked: false,
-          blocked: false,
         })
         .sort({ createdAt: -1 });
 
@@ -146,108 +140,6 @@ class UsersController extends BaseController {
     } catch (error) {
       console.log(error);
       return this.errorRes(res, 500, 'Error getting users', error);
-    }
-  };
-
-  getUserTweets = async (req: Request, res: Response): Promise<Response> => {
-    const { userId } = req.params;
-    const authUserId = (req as AuthRequest).user._id;
-    const { date } = req.query;
-
-    try {
-      const user = User.exists({ _id: userId });
-
-      if (!user) {
-        return this.errorRes(res, 404, 'User not found');
-      }
-
-      const tweetPipelineBuilder = tweetPipeline(null, authUserId)
-        .match({
-          'user._id': new Types.ObjectId(userId),
-          isReplyTo: null,
-        })
-        .sort({ createdAt: -1 });
-
-      if (date) {
-        tweetPipelineBuilder.match({
-          createdAt: { $lt: new Date(date as string) },
-        });
-      }
-
-      const tweets = await tweetPipelineBuilder.limit(10).exec();
-
-      return this.successRes(res, 200, 'Tweets from user retrieved', tweets);
-    } catch (error) {
-      return this.errorRes(res, 500, 'Error getting tweets', error);
-    }
-  };
-
-  getUserLikedTweets = async (
-    req: Request,
-    res: Response,
-  ): Promise<Response> => {
-    const { userId } = req.params;
-    const authUserId = (req as AuthRequest).user._id;
-    const { date } = req.query;
-
-    try {
-      const user = User.exists({ _id: userId });
-
-      if (!user) {
-        return this.errorRes(res, 404, 'User not found');
-      }
-
-      const tweetPipelineBuilder = tweetPipeline(
-        {
-          'likes.userId': new Types.ObjectId(userId),
-        },
-        authUserId,
-      ).sort({ createdAt: -1 });
-
-      if (date) {
-        tweetPipelineBuilder.match({
-          createdAt: { $lt: new Date(date as string) },
-        });
-      }
-
-      const tweets = await tweetPipelineBuilder.limit(10).exec();
-
-      return this.successRes(res, 200, 'Liked tweets retrieved', tweets);
-    } catch (error) {
-      return this.errorRes(res, 500, 'Error getting liked tweets', error);
-    }
-  };
-
-  getUserReplies = async (req: Request, res: Response): Promise<Response> => {
-    const { userId } = req.params;
-    const authUserId = (req as AuthRequest).user._id;
-    const { date } = req.query;
-
-    try {
-      const user = User.exists({ _id: userId });
-
-      if (!user) {
-        return this.errorRes(res, 404, 'User not found');
-      }
-
-      const tweetPipelineBuilder = tweetPipeline(
-        {
-          'replies.user._id': new Types.ObjectId(userId),
-        },
-        authUserId,
-      ).sort({ createdAt: -1 });
-
-      if (date) {
-        tweetPipelineBuilder.match({
-          createdAt: { $lt: new Date(date as string) },
-        });
-      }
-
-      const tweets = await tweetPipelineBuilder.limit(10).exec();
-
-      return this.successRes(res, 200, 'Replies retrieved', tweets);
-    } catch (error) {
-      return this.errorRes(res, 500, 'Error getting replies', error);
     }
   };
 
