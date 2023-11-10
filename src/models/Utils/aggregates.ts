@@ -58,7 +58,19 @@ export function tweetPipeline(
       isReplyTo: 1,
       isEdited: 1,
       createdAt: 1,
-      user: { _id: 1, name: 1, username: 1, avatar: 1 },
+      user: {
+        $let: {
+          vars: {
+            userObj: { $arrayElemAt: ['$user', 0] },
+          },
+          in: {
+            _id: '$$userObj._id',
+            name: '$$userObj.name',
+            username: '$$userObj.username',
+            avatar: '$$userObj.avatar',
+          },
+        },
+      },
       likeCount: { $size: '$likes' },
       replyCount: { $size: '$replies' },
       liked: 1,
