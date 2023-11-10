@@ -216,6 +216,10 @@ class UsersController extends BaseController {
     const { userId } = req.params;
     const authUserId = (req as AuthRequest).user._id;
 
+    if (userId === authUserId.toString()) {
+      return this.errorRes(res, 400, 'Cannot follow yourself');
+    }
+
     try {
       const user = User.exists({ _id: userId });
 
@@ -266,6 +270,10 @@ class UsersController extends BaseController {
   handleBlock = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = req.params;
     const authUserId = (req as AuthRequest).user._id;
+
+    if (userId === authUserId.toString()) {
+      return this.errorRes(res, 400, 'Cannot block yourself');
+    }
 
     try {
       const user = User.exists({ _id: userId });

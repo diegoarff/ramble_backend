@@ -305,7 +305,7 @@ class TweetsController extends BaseController {
   };
 
   searchTweets = async (req: Request, res: Response): Promise<Response> => {
-    const { query, date } = req.query;
+    const { query, filter, page } = req.query;
     const userId = (req as AuthRequest).user._id;
 
     if (!query) {
@@ -319,24 +319,40 @@ class TweetsController extends BaseController {
       const blockedUserIds = myBlocks.map((block) => block.blockedUserId);
       const blockedByUserIds = blocksMe.map((block) => block.userId);
 
-      const tweetPipelineBuilder = tweetPipeline(null, userId)
-        .match({
-          $and: [
-            { content: { $regex: query as string, $options: 'i' } },
-            { 'user._id': { $nin: blockedUserIds } },
-            { 'user._id': { $nin: blockedByUserIds } },
-            { isReplyTo: null },
-          ],
-        })
-        .sort({ createdAt: -1 });
+      const tweetPipelineBuilder = tweetPipeline(null, userId).match({
+        $and: [
+          { content: { $regex: query as string, $options: 'i' } },
+          { 'user._id': { $nin: blockedUserIds } },
+          { 'user._id': { $nin: blockedByUserIds } },
+          { isReplyTo: null },
+        ],
+      });
 
-      if (date) {
-        tweetPipelineBuilder.match({
-          createdAt: { $lt: new Date(date as string) },
-        });
+      if (filter) {
+        switch (filter) {
+          case 'latest':
+            tweetPipelineBuilder.sort({ createdAt: -1 });
+            break;
+          case 'oldest':
+            tweetPipelineBuilder.sort({ createdAt: 1 });
+            break;
+          case 'popular':
+            tweetPipelineBuilder.sort({ likes: -1 });
+            break;
+          case 'media':
+            tweetPipelineBuilder
+              .match({ image: { $ne: null } })
+              .sort({ createdAt: -1 });
+            break;
+          default:
+            break;
+        }
       }
 
-      const tweets = await tweetPipelineBuilder.limit(10).exec();
+      const tweets = await tweetPipelineBuilder
+        .skip(10 * (parseInt(page as string) - 1))
+        .limit(10)
+        .exec();
 
       return this.successRes(res, 200, 'Tweets retrieved', tweets);
     } catch (error) {
