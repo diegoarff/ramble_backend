@@ -1,10 +1,9 @@
-
 # Ramble Backend
 
 This is the backend for [Ramble](https://github.com/diegoarff/ramble), a Twitter / X clone made for an university project.
 
-
 ## API Reference
+
 Para aquellos endpoints con paginación (los que cuentan con un parámetro date), usar el campo `createdAt` del último elemento devuelto en la lista.
 
 - [Create a new user account](#create-a-new-user-account)
@@ -36,11 +35,15 @@ Para aquellos endpoints con paginación (los que cuentan con un parámetro date)
 ```http
 GET ?date={ createdAt field of last item }`
 ```
+
 ### Create a new user account
+
 ```http
   POST /auth/signup
 ```
+
 #### Request
+
 ```
 body: {
     name: string,
@@ -50,8 +53,11 @@ body: {
     bio?: string
 }
 ```
+
 Password must be at least 8 characters and contain 1 number and 1 uppercase.
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -67,19 +73,26 @@ Password must be at least 8 characters and contain 1 number and 1 uppercase.
   }
 }
 ```
+
 ### Sign in an existing user
+
 ```http
   POST /auth/signin
 ```
+
 #### Request
+
 ```
 body: {
     identifier: string,
     password: string
 }
 ```
+
 Identifier is the username or email of the user trying to sign in.
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -89,15 +102,21 @@ Identifier is the username or email of the user trying to sign in.
   }
 }
 ```
+
 ### Get authenticated user
+
 ```http
   GET /users/me
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -114,11 +133,15 @@ Requires Authorization header with Bearer token
   }
 }
 ```
+
 ### Update authenticated user
+
 ```http
   PUT /users/me
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 
@@ -129,8 +152,11 @@ body: {
     avatar?: string
 }
 ```
+
 At least one field must be provided.
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -146,26 +172,36 @@ At least one field must be provided.
   }
 }
 ```
+
 ### Delete user account
+
 ```http
   DELETE /users/me
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
   "message": "Account deleted"
 }
 ```
+
 ### Update user password
+
 ```http
   DELETE /users/me/password
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 
@@ -175,22 +211,30 @@ body: {
   "confirmNewPassword": string
 }
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
   "message": "Password updated"
 }
 ```
+
 ### Get the profile of a user
+
 ```http
   GET /users/:userId
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -210,46 +254,64 @@ Requires Authorization header with Bearer token
   }
 }
 ```
+
 ### Follow or unfollow a user
+
 ```http
   POST /users/:userId/follow
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
   "message": "User followed" | "User unfollowed"
 }
 ```
+
 ### Block or unblock a user
+
 ```http
   POST /users/:userId/block
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
   "message": "User blocked" | "User unblocked"
 }
 ```
+
 ### Get followers list of a user
+
 ```http
   GET /users/:userId/followers
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -267,16 +329,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Get following list of a user
+
 ```http
   GET /users/:userId/following
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -294,16 +362,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Search users (by name or username)
+
 ```http
   GET /users/search
   PARAMS: query, date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -318,22 +392,28 @@ Requires Authorization header with Bearer token
       "createdAt": "",
       "followingCount": number,
       "followersCount": number
-    }, 
+    },
     { ... },
     ...
   ]
 }
 ```
+
 ### Get tweets from user
+
 ```http
   GET /tweets/user/:userId
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -343,17 +423,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": null,
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -363,16 +441,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Get reply tweets from user
+
 ```http
   GET /tweets/user/:userId/replies
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -382,17 +466,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": "",
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -402,16 +484,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Get liked tweets from user
+
 ```http
   GET /tweets/user/:userId/liked
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -424,14 +512,12 @@ Requires Authorization header with Bearer token
       "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -441,16 +527,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Search tweets
+
 ```http
   GET /tweets/search
-  PARAMS: query, date
+  PARAMS: query, date, filter ('latest' | 'oldest' | 'popular' | 'media')
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -460,17 +552,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": null,
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -480,16 +570,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Get recent tweets
+
 ```http
   GET /tweets/recent
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -499,17 +595,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": null,
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -519,16 +613,22 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
+
 ### Get following tweets
+
 ```http
   GET /tweets/following
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -538,17 +638,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": null,
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
@@ -558,11 +656,15 @@ Requires Authorization header with Bearer token
   ]
 }
 ```
-### Create tweet 
+
+### Create tweet
+
 ```http
   POST /tweets/
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 
@@ -571,7 +673,9 @@ body: {
   "image"?: string
 }
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -588,15 +692,21 @@ body: {
   }
 }
 ```
+
 ### Get tweet
+
 ```http
   GET /tweets/:tweetId
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -608,25 +718,27 @@ Requires Authorization header with Bearer token
     "isReplyTo": "" | null,
     "isEdited": boolean,
     "createdAt": "",
-    "user": [
-      {
-        "_id": "",
-        "name": "",
-        "username": "",
-        "avatar": ""
-      }
-    ],
+    "user": {
+      "_id": "",
+      "name": "",
+      "username": "",
+      "avatar": ""
+    },
     "liked": boolean,
     "likeCount": number,
     "replyCount": number
   }
 }
 ```
+
 ### Update tweet
+
 ```http
   PUT /tweets/:tweetId
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 
@@ -635,7 +747,9 @@ body: {
   "image"?: string
 }
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -652,15 +766,21 @@ body: {
   }
 }
 ```
+
 ### Delete tweet
+
 ```http
   DELETE /tweets/:tweetId
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -677,11 +797,15 @@ Requires Authorization header with Bearer token
   }
 }
 ```
-### Reply to a tweet 
+
+### Reply to a tweet
+
 ```http
   POST /tweets/:tweetId/reply
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 
@@ -690,7 +814,9 @@ body: {
   "image"?: string
 }
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -707,31 +833,43 @@ body: {
   }
 }
 ```
-### Like or unlike a tweet 
+
+### Like or unlike a tweet
+
 ```http
   POST /tweets/:tweetId/like
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
   "message": "Tweet liked" | "Tweet unliked"
 }
 ```
+
 ### Get replies from a tweet
+
 ```http
   GET /tweets/:tweetId/replies
   PARAMS: date
 ```
+
 #### Request
+
 ```
 Requires Authorization header with Bearer token
 ```
+
 #### Response
+
 ```
 {
   "status": "success",
@@ -741,17 +879,15 @@ Requires Authorization header with Bearer token
       "_id": "",
       "content": "",
       "image": "" | null,
-      "isReplyTo": "",
+      "isReplyTo": "" | null,
       "isEdited": boolean,
       "createdAt": "",
-      "user": [
-        {
-          "_id": "",
-          "name": "",
-          "username": "",
-          "avatar": ""
-        }
-      ],
+      "user": {
+        "_id": "",
+        "name": "",
+        "username": "",
+        "avatar": ""
+      },
       "liked": boolean,
       "likeCount": number,
       "replyCount": number
