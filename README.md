@@ -98,7 +98,8 @@ Identifier is the username or email of the user trying to sign in.
   "status": "success",
   "message": "User logged in",
   "data": {
-    "token": JWT Token
+    "token": JWT Token,
+    "userId": ""
   }
 }
 ```

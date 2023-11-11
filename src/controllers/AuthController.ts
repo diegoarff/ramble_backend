@@ -53,7 +53,10 @@ class AuthController extends BaseController {
 
       const token = user.createToken();
 
-      return this.successRes(res, 200, 'User logged in', { token });
+      return this.successRes(res, 200, 'User logged in', {
+        token,
+        userId: user._id,
+      });
     } catch (error) {
       return this.errorRes(res, 500, 'Internal server error');
     }
