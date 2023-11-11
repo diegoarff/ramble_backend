@@ -339,7 +339,7 @@ class TweetsController extends BaseController {
             tweetPipelineBuilder.sort({ createdAt: 1 });
             break;
           case 'popular':
-            tweetPipelineBuilder.sort({ likes: -1 });
+            tweetPipelineBuilder.sort({ likeCount: -1 });
             break;
           case 'media':
             tweetPipelineBuilder
@@ -358,6 +358,7 @@ class TweetsController extends BaseController {
 
       return this.successRes(res, 200, 'Tweets retrieved', tweets);
     } catch (error) {
+      console.error(error);
       return this.errorRes(res, 500, 'Failed to get tweets', error);
     }
   };
