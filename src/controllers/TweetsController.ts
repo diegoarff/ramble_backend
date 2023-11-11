@@ -96,6 +96,8 @@ class TweetsController extends BaseController {
         );
       }
 
+      // Find all tweets that have isReplyTo set to this tweet id and delete them
+      await Tweet.deleteMany({ isReplyTo: tweetId });
       await tweet.deleteOne();
 
       return this.successRes(res, 200, 'Tweet deleted', tweet);

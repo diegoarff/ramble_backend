@@ -35,4 +35,9 @@ const TweetSchema = new Schema<ITweetDocument>(
   },
 );
 
+// On tweet deleteone or delete many, delete all replies
+TweetSchema.pre('deleteOne', { document: true }, async function () {
+  await this.model('Tweet').deleteMany({ isReplyTo: this._id });
+});
+
 export default model<ITweetDocument>('Tweet', TweetSchema);
