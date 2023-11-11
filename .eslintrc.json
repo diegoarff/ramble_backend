@@ -20,7 +20,6 @@
     "prettier/prettier": "error",
     "@typescript-eslint/no-floating-promises": "off",
     "@typescript-eslint/no-misused-promises": "off",
-    "@typescript-eslint/consistent-type-imports": "off",
     "@typescript-eslint/strict-boolean-expressions": "off"
   }
 }
