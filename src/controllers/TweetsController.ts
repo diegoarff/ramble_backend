@@ -179,9 +179,11 @@ class TweetsController extends BaseController {
     const { date } = req.query;
 
     try {
-      const tweetPipelineBuilder = tweetPipeline(null, userId).match({
-        isReplyTo: new Types.ObjectId(tweetId),
-      });
+      const tweetPipelineBuilder = tweetPipeline(null, userId)
+        .match({
+          isReplyTo: new Types.ObjectId(tweetId),
+        })
+        .sort({ createdAt: -1 });
 
       if (date) {
         tweetPipelineBuilder.match({
