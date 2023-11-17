@@ -345,7 +345,9 @@ class TweetsController extends BaseController {
             break;
           case 'media':
             tweetPipelineBuilder
-              .match({ image: { $ne: null } })
+              .match({
+                $and: [{ image: { $ne: null } }, { image: { $ne: '' } }],
+              })
               .sort({ createdAt: -1 });
             break;
           default:
