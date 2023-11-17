@@ -179,9 +179,11 @@ class TweetsController extends BaseController {
     const { date } = req.query;
 
     try {
-      const tweetPipelineBuilder = tweetPipeline(null, userId).match({
-        isReplyTo: new Types.ObjectId(tweetId),
-      });
+      const tweetPipelineBuilder = tweetPipeline(null, userId)
+        .match({
+          isReplyTo: new Types.ObjectId(tweetId),
+        })
+        .sort({ createdAt: -1 });
 
       if (date) {
         tweetPipelineBuilder.match({
@@ -343,7 +345,9 @@ class TweetsController extends BaseController {
             break;
           case 'media':
             tweetPipelineBuilder
-              .match({ image: { $ne: null } })
+              .match({
+                $and: [{ image: { $ne: null } }, { image: { $ne: '' } }],
+              })
               .sort({ createdAt: -1 });
             break;
           default:
