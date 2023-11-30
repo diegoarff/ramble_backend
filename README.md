@@ -4,7 +4,7 @@ This is the backend for [Ramble](https://github.com/diegoarff/ramble), a Twitter
 
 ## API Reference
 
-Para aquellos endpoints con paginación (los que cuentan con un parámetro date), usar el campo `createdAt` del último elemento devuelto en la lista.
+For paginated endpoints (the ones with a date param), use field `createdAt` of the last element in the first response.
 
 - [Create a new user account](#create-a-new-user-account)
 - [Sign in an existing user](#sign-in-an-existing-user)
